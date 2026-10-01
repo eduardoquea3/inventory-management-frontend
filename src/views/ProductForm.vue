@@ -1,15 +1,20 @@
 <template>
   <div class="container">
     <h1>{{ isEdit ? 'Editar' : 'Crear' }} Producto</h1>
-    <p v-if="loading">Guardando...</p>
-    <p class="error" v-if="error">{{ error }}</p>
-    <p class="success" v-if="success">{{ success }}</p>
+    <p v-if="loadingProduct" role="status">Cargando producto...</p>
+    <p v-if="loading" role="status">Guardando...</p>
+    <p class="error" v-if="error" role="alert">{{ error }}</p>
+    <p class="success" v-if="success" role="status">{{ success }}</p>
 
-    <div class="card">
-      <input v-model="form.name" placeholder="Nombre" />
-      <textarea v-model="form.description" placeholder="Descripción"></textarea>
-      <input v-model="form.price" placeholder="Precio" />
-      <input v-model="form.stock" placeholder="Stock" />
+    <div class="card" v-if="!loadingProduct">
+      <label for="product-name">Nombre</label>
+      <input id="product-name" v-model.trim="form.name" placeholder="Nombre" required />
+      <label for="product-description">Descripción</label>
+      <textarea id="product-description" v-model="form.description" placeholder="Descripción"></textarea>
+      <label for="product-price">Precio</label>
+      <input id="product-price" v-model.number="form.price" type="number" step="any" placeholder="Precio" />
+      <label for="product-stock">Stock</label>
+      <input id="product-stock" v-model.number="form.stock" type="number" step="any" placeholder="Stock" />
       <select v-model="form.category_id">
         <option value="">Seleccione categoría</option>
         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -18,7 +23,7 @@
         <option :value="1">Activo</option>
         <option :value="0">Inactivo</option>
       </select>
-      <button @click="save">Guardar</button>
+      <button :disabled="loading || loadingProduct" @click="save">{{ loading ? 'Guardando...' : 'Guardar' }}</button>
     </div>
   </div>
 </template>
@@ -30,6 +35,7 @@ export default {
   data() {
     return {
       loading: false,
+      loadingProduct: false,
       error: '',
       success: '',
       categories: [],
@@ -59,17 +65,28 @@ export default {
       })
     },
     loadProduct() {
+      this.loadingProduct = true
       api.get('/products/' + this.$route.params.id).then(res => {
-        this.form = res.data.data
+        this.form = { ...this.form, ...res.data.data }
       }).catch(err => {
         this.error = err.userMessage
+      }).finally(() => {
+        this.loadingProduct = false
       })
     },
     save() {
-      // Legacy issue: weak validation and allows invalid numeric values.
+      this.error = ''
+      this.success = ''
       if (!this.form.name) {
         this.error = 'Nombre requerido'
         return
+      }
+      for (const field of ['price', 'stock']) {
+        const value = this.form[field]
+        if (value !== '' && value !== null && value !== undefined && !Number.isFinite(Number(value))) {
+          this.error = field === 'price' ? 'Ingrese un precio válido' : 'Ingrese un stock válido'
+          return
+        }
       }
 
       this.loading = true
