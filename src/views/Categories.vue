@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api'
 
 export default {
   data() {
@@ -51,11 +51,9 @@ export default {
   },
   methods: {
     load() {
-      axios.get((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/categories', {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-      }).then(res => {
+      api.get('/categories').then(res => {
         this.categories = res.data.categories
-      }).catch(() => this.error = 'Error al cargar categorías')
+      }).catch(err => this.error = err.userMessage)
     },
     edit(c) {
       this.form = c
@@ -65,21 +63,21 @@ export default {
         this.error = 'Nombre obligatorio'
         return
       }
-      const url = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/categories' + (this.form.id ? '/' + this.form.id : '')
+      const url = '/categories' + (this.form.id ? '/' + this.form.id : '')
       const method = this.form.id ? 'put' : 'post'
-      axios({ method, url, data: this.form, headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } })
+      api({ method, url, data: this.form })
         .then(() => {
           this.success = 'Guardado'
           this.form = { id: null, name: '', description: '', status: 1 }
           this.load()
         }).catch(err => {
-          this.error = err.response ? JSON.stringify(err.response.data) : 'Error'
+          this.error = err.userMessage
         })
     },
     remove(id) {
-      axios.delete((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/categories/' + id, {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-      }).then(() => this.load())
+      api.delete('/categories/' + id).then(() => this.load()).catch(err => {
+        this.error = err.userMessage
+      })
     }
   }
 }

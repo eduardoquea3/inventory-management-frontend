@@ -11,7 +11,8 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api'
+import { useAuthStore } from '../stores/auth'
 
 export default {
   data() {
@@ -24,14 +25,14 @@ export default {
   methods: {
     login() {
       // Legacy issue: no loading state and no strong frontend validation.
-      axios.post((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/login', {
+      api.post('/login', {
         email: this.email,
         password: this.password
       }).then(res => {
-        localStorage.setItem('token', res.data.token)
+        useAuthStore().setToken(res.data.token)
         this.$router.push('/dashboard')
       }).catch(err => {
-        this.error = err.response ? err.response.data.message || err.response.data.error : 'Error de red'
+        this.error = err.userMessage
       })
     }
   }

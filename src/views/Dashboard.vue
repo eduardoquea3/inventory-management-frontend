@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api'
 
 export default {
   data() {
@@ -34,12 +34,10 @@ export default {
   },
   mounted() {
     this.loading = true
-    axios.get((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/dashboard', {
-      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-    }).then(res => {
+    api.get('/dashboard').then(res => {
       this.data = res.data
-    }).catch(() => {
-      this.error = 'No se pudo cargar dashboard'
+    }).catch(err => {
+      this.error = err.userMessage
     }).finally(() => {
       this.loading = false
     })

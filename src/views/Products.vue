@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api'
 
 export default {
   data() {
@@ -66,35 +66,31 @@ export default {
   },
   methods: {
     loadCategories() {
-      axios.get((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/categories', {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-      }).then(res => {
+      api.get('/categories').then(res => {
         this.categories = res.data.categories
+      }).catch(err => {
+        this.error = err.userMessage
       })
     },
     loadProducts() {
       this.loading = true
       this.error = ''
-      axios.get((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/products?q=' + this.q + '&category_id=' + this.category_id, {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-      }).then(res => {
+      api.get('/products?q=' + this.q + '&category_id=' + this.category_id).then(res => {
         // Legacy issue: assumes backend returns array directly.
         this.products = res.data
       }).catch(err => {
-        this.error = err.response ? 'Error: ' + err.response.status : 'Error de red'
+        this.error = err.userMessage
       }).finally(() => {
         this.loading = false
       })
     },
     remove(id) {
       if (!confirm('¿Eliminar producto?')) return
-      axios.delete((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/products/' + id, {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-      }).then(() => {
+      api.delete('/products/' + id).then(() => {
         this.success = 'Producto eliminado'
         this.loadProducts()
-      }).catch(() => {
-        this.error = 'No se pudo eliminar'
+      }).catch(err => {
+        this.error = err.userMessage
       })
     }
   }

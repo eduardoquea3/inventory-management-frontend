@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api'
 
 export default {
   data() {
@@ -54,15 +54,15 @@ export default {
   },
   methods: {
     loadCategories() {
-      axios.get((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/categories', {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-      }).then(res => this.categories = res.data.categories)
+      api.get('/categories').then(res => this.categories = res.data.categories).catch(err => {
+        this.error = err.userMessage
+      })
     },
     loadProduct() {
-      axios.get((import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/products/' + this.$route.params.id, {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
-      }).then(res => {
+      api.get('/products/' + this.$route.params.id).then(res => {
         this.form = res.data.data
+      }).catch(err => {
+        this.error = err.userMessage
       })
     },
     save() {
@@ -73,19 +73,18 @@ export default {
       }
 
       this.loading = true
-      const url = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/products' + (this.isEdit ? '/' + this.$route.params.id : '')
+      const url = '/products' + (this.isEdit ? '/' + this.$route.params.id : '')
       const method = this.isEdit ? 'put' : 'post'
 
-      axios({
+      api({
         method,
         url,
-        data: this.form,
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+        data: this.form
       }).then(() => {
         this.success = 'Guardado correctamente'
         setTimeout(() => this.$router.push('/products'), 800)
       }).catch(err => {
-        this.error = err.response ? JSON.stringify(err.response.data) : 'Error de red'
+        this.error = err.userMessage
       }).finally(() => {
         this.loading = false
       })

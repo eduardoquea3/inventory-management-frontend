@@ -1,16 +1,14 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Login from './views/Login.vue'
 import Dashboard from './views/Dashboard.vue'
 import Products from './views/Products.vue'
 import ProductForm from './views/ProductForm.vue'
 import Categories from './views/Categories.vue'
 import StockMovements from './views/StockMovements.vue'
+import { useAuthStore } from './stores/auth'
 
-Vue.use(Router)
-
-const router = new Router({
-  mode: 'history',
+const router = createRouter({
+  history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/dashboard' },
     { path: '/login', component: Login },
@@ -23,13 +21,9 @@ const router = new Router({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  // Legacy issue: simplistic route guard.
-  if (to.path !== '/login' && !localStorage.getItem('token')) {
-    next('/login')
-  } else {
-    next()
-  }
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  if (to.path !== '/login' && !auth.isAuthenticated) return '/login'
 })
 
 export default router
