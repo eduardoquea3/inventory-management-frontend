@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --color-graphite: #202820;
+  --color-warehouse-paper: #f2f0e8;
+  --color-clean-label: #fbfaf6;
+  --color-safety-amber: #e0a334;
+  --color-steel: #788176;
+  --color-forest: #354b3d;
+  --font-display: "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-utility: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
