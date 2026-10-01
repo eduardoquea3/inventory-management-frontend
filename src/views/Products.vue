@@ -4,16 +4,22 @@
     <router-link to="/products/new">Nuevo producto</router-link>
 
     <div class="card">
-      <input v-model="q" placeholder="Buscar producto" @keyup.enter="loadProducts" />
-      <select v-model="category_id">
+      <input v-model="q" placeholder="Buscar producto" :disabled="loading" @keyup.enter="applyFilters" />
+      <select v-model="category_id" :disabled="loading" @change="applyFilters">
         <option value="">Todas las categorías</option>
         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
       </select>
-      <button :disabled="loading" @click="loadProducts">{{ loading ? 'Buscando...' : 'Buscar' }}</button>
+      <select v-model="status" :disabled="loading" @change="applyFilters" aria-label="Filtrar por estado">
+        <option value="">Todos los estados</option>
+        <option value="1">Activos</option>
+        <option value="0">Inactivos</option>
+      </select>
+      <button :disabled="loading" @click="applyFilters">{{ loading ? 'Buscando...' : 'Buscar' }}</button>
     </div>
 
     <p v-if="loading" role="status">Cargando productos...</p>
     <p class="error" v-if="error" role="alert">{{ error }}</p>
+    <p class="error" v-if="categoryError" role="alert">{{ categoryError }}</p>
     <p class="success" v-if="success" role="status">{{ success }}</p>
     <p v-if="!loading && !error && products.length === 0">No se encontraron productos.</p>
 
@@ -43,6 +49,19 @@
         </tr>
       </tbody>
     </table>
+
+    <div v-if="pagination.lastPage > 1 || products.length > 0" class="pagination">
+      <button :disabled="loading || pagination.currentPage <= 1" @click="changePage(pagination.currentPage - 1)">Anterior</button>
+      <span>Página {{ pagination.currentPage }} de {{ pagination.lastPage }} ({{ pagination.total }} productos)</span>
+      <button :disabled="loading || pagination.currentPage >= pagination.lastPage" @click="changePage(pagination.currentPage + 1)">Siguiente</button>
+      <label>Por página
+        <select v-model.number="perPage" :disabled="loading" @change="changePageSize">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+        </select>
+      </label>
+    </div>
   </div>
 </template>
 
@@ -56,9 +75,14 @@ export default {
       categories: [],
       loading: false,
       error: '',
+      categoryError: '',
       success: '',
       q: '',
       category_id: '',
+      status: '',
+      page: 1,
+      perPage: 10,
+      pagination: { currentPage: 1, lastPage: 1, total: 0 },
       deletingId: null
     }
   },
@@ -67,26 +91,62 @@ export default {
     this.loadProducts()
   },
   methods: {
-    loadCategories() {
-      api.get('/categories').then(res => {
-        this.categories = res.data.categories
-      }).catch(err => {
-        this.error = err.userMessage
-      })
+    async loadCategories() {
+      this.categoryError = ''
+      try {
+        const first = await api.get('/categories', { params: { page: 1, per_page: 15 } })
+        const { data, meta } = first.data
+        const categories = [...data]
+        for (let page = 2; page <= Number(meta.last_page); page++) {
+          const response = await api.get('/categories', { params: { page, per_page: 15 } })
+          categories.push(...response.data.data)
+        }
+        this.categories = categories
+      } catch (err) {
+        this.categoryError = err.userMessage || 'No se pudieron cargar las categorías.'
+      }
     },
-    loadProducts() {
+    applyFilters() {
+      this.page = 1
+      this.loadProducts()
+    },
+    changePage(page) {
+      this.page = page
+      this.loadProducts()
+    },
+    changePageSize() {
+      this.page = 1
+      this.loadProducts()
+    },
+    async loadProducts() {
+      if (this.loading) return
       this.loading = true
       this.error = ''
       this.success = ''
-      const params = new URLSearchParams({ q: this.q, category_id: this.category_id })
-      api.get('/products?' + params.toString()).then(res => {
-        // Legacy issue: assumes backend returns array directly.
-        this.products = res.data
-      }).catch(err => {
+      try {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const requestedPage = this.page
+          const params = new URLSearchParams({ page: String(requestedPage), per_page: String(this.perPage) })
+          if (this.q) params.set('q', this.q)
+          if (this.category_id !== '') params.set('category_id', String(this.category_id))
+          if (this.status !== '') params.set('status', this.status)
+          const res = await api.get('/products?' + params.toString())
+          const { data, meta } = res.data
+          const lastPage = Math.max(1, Number(meta.last_page) || 1)
+          if (requestedPage > lastPage && attempt === 0) {
+            this.page = lastPage
+            continue
+          }
+          this.products = data
+          this.pagination = { currentPage: meta.current_page, lastPage, total: meta.total }
+          this.page = Math.min(Number(meta.current_page) || 1, lastPage)
+          break
+        }
+      } catch (err) {
         this.error = err.userMessage
-      }).finally(() => {
+      } finally {
         this.loading = false
-      })
+      }
     },
     remove(id) {
       if (!confirm('¿Eliminar producto?')) return

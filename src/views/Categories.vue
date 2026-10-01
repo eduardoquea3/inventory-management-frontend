@@ -68,6 +68,19 @@
         </tr>
       </tbody>
     </table>
+
+    <div v-if="pagination.lastPage > 1 || categories.length > 0" class="pagination">
+      <button type="button" :disabled="loading || pagination.currentPage <= 1" @click="changePage(pagination.currentPage - 1)">Anterior</button>
+      <span>Página {{ pagination.currentPage }} de {{ pagination.lastPage }} ({{ pagination.total }} categorías)</span>
+      <button type="button" :disabled="loading || pagination.currentPage >= pagination.lastPage" @click="changePage(pagination.currentPage + 1)">Siguiente</button>
+      <label>Por página
+        <select v-model.number="perPage" :disabled="loading" @change="changePageSize">
+          <option :value="15">15</option>
+          <option :value="30">30</option>
+          <option :value="50">50</option>
+        </select>
+      </label>
+    </div>
   </div>
 </template>
 
@@ -80,6 +93,9 @@ export default {
   data() {
     return {
       categories: [],
+      page: 1,
+      perPage: 15,
+      pagination: { currentPage: 1, lastPage: 1, total: 0 },
       form: emptyForm(),
       loading: false,
       saving: false,
@@ -96,12 +112,39 @@ export default {
       this.error = ''
       this.success = ''
     },
+    changePage(page) {
+      this.page = page
+      this.load()
+    },
+    changePageSize() {
+      this.page = 1
+      this.load()
+    },
     async load() {
+      if (this.loading) return
       this.loading = true
       this.error = ''
       try {
-        const response = await api.get('/categories')
-        this.categories = response.data.categories
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const requestedPage = this.page
+          const response = await api.get('/categories', {
+            params: { page: requestedPage, per_page: this.perPage }
+          })
+          const { data, meta } = response.data
+          const lastPage = Math.max(1, Number(meta.last_page) || 1)
+          if (requestedPage > lastPage && attempt === 0) {
+            this.page = lastPage
+            continue
+          }
+          this.categories = data
+          this.pagination = {
+            currentPage: meta.current_page,
+            lastPage,
+            total: meta.total
+          }
+          this.page = Math.min(Number(meta.current_page) || 1, lastPage)
+          break
+        }
       } catch (error) {
         this.error = error.userMessage
       } finally {
