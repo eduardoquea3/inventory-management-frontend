@@ -10,7 +10,7 @@ Migrate the legacy Vue 2 frontend to the requirements in `Frontend-Guia-Prueba-T
 - Do not begin a stage until the user explicitly accepts that stage (or explicitly authorizes a named set of stages).
 - No API contract, dashboard schema, low-stock threshold, or validation rules are to be invented. Record backend decisions when confirmed.
 - Docker integration is intentionally late and must align with the backend-owned Compose/network setup and Nginx requirement.
-- Keep `.env.example` as a repository example (explicitly unignored by `.gitignore`); do not expose real secrets. The example contents could not be inspected due to sensitive-file access controls.
+- Keep `.env.example` as a non-secret repository template; it sets `VITE_API_URL=/api` for Docker builds. Never put real credentials in it.
 - Treat `Frontend-Guia-Prueba-Tecnica.md` as local reference only; it is ignored by `.gitignore` per user request.
 - Keep changes scoped, validate each stage, and report blocked checks/dependencies. Do not commit unless explicitly asked.
 
@@ -37,7 +37,7 @@ Migrate the legacy Vue 2 frontend to the requirements in `Frontend-Guia-Prueba-T
 | 7 | Dashboard: KPIs and recent movements from the confirmed endpoint/envelope. | Implemented and covered by component tests; live authenticated UI flow remains open | Dashboard unwraps the success envelope and covers metrics, empty and error states. |
 | 8 | Personalized UI redesign: Tailwind 4 and cohesive responsive warehouse theme. | Complete — all six views and shared shell | Build passes; manual desktop/mobile and keyboard visual review remains open. |
 | 9 | Docker + Nginx integration: frontend image and proxy on backend-owned network. | Implemented and locally smoke-tested | Frontend Compose joins `backend-legacy-laravel8_default`; root/deep routes, assets and proxied `/api/health` work. Nginx config refreshes DNS for `app`. Authenticated UI flow remains unverified. |
-| 10 | Delivery readiness: README, versions/decisions, regression and Docker evidence. | README/checklist updated; environment example remains unreviewed | Frontend/backend suites and build pass; browser visual QA and authenticated UI/backend flow remain open. |
+| 10 | Delivery readiness: README, versions/decisions, regression and Docker evidence. | README and Docker environment template updated; visual/authenticated E2E remain open | Frontend/backend suites and build pass; browser visual QA and authenticated UI/backend flow remain open. |
 
 ## Stage 8 design plan — approved direction
 
@@ -64,7 +64,7 @@ Migrate the legacy Vue 2 frontend to the requirements in `Frontend-Guia-Prueba-T
 - Docker/Nginx: frontend image builds and runs on ports 8080 (standalone) and 8081 (integrated backend Compose), serves SPA deep links/assets, and both proxies return `/api/health` 200. Unauthenticated products correctly return 401; runtime DNS refresh is configured for backend app recreation.
 - Pending: authenticated browser/API workflows and manual responsive/keyboard visual review. No live login or catalog/stock writes were sent. Orca Computer Use returned `unsupported_capability` while enumerating Linux apps.
 - Recovery required: an earlier `php artisan test` invocation used `APP_ENV=local` and MySQL instead of the test SQLite configuration. Its `RefreshDatabase` test reinitialized the shared local database. The last read-only count found only the `Volume Product` fixture set (10,000 products, 100 categories, 30,000 movements); the original `Producto Legacy` rows were absent. MySQL binary logs are enabled, but no replay or reseed was attempted without user authorization.
-- Frontend deployment does not modify the backend repository. `.env.example` remains unreviewed.
+- Frontend deployment does not modify the backend repository. `.env.example` contains only the Docker-relative API base URL.
 - The concise current checklist is [frontend-current-status.md](./frontend-current-status.md).
 
 ## Historical ODD scope update — view polish and pagination
