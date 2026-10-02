@@ -79,3 +79,5 @@ Para detener la UI, ejecuta `docker compose down` desde este repositorio. Detén
 ## API y autenticación
 
 En desarrollo local, Axios usa la URL definida en `VITE_API_URL` (o `http://127.0.0.1:8000/api` si no se define). En Docker, Nginx reenvía `/api/` a `app:8000/api/` dentro de la red backend. El cliente agrega `Authorization: Bearer <token>` desde el token de sesión guardado en el navegador.
+
+Las respuestas exitosas usan el envelope `{ "success": true, "data": ... }`; el login devuelve el token en `data.token`. Las listas paginadas incluyen `meta.pagination`. Los errores usan `error.code` y `error.message`; el cliente convierte estos campos en el mensaje visible en la interfaz.
