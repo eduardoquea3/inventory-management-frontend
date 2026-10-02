@@ -55,6 +55,7 @@
 
 <script>
 import api from '../api'
+import { readPaginatedResponse } from '../utils/catalogQuery'
 
 export default {
   data() {
@@ -84,10 +85,24 @@ export default {
     if (this.isEdit) this.loadProduct()
   },
   methods: {
-    loadCategories() {
-      api.get('/categories').then(res => this.categories = res.data.categories).catch(err => {
+    async loadCategories() {
+      try {
+        let page = 1
+        let lastPage = 1
+        const categories = []
+
+        do {
+          const response = await api.get('/categories', { params: { page, per_page: 100 } })
+          const result = readPaginatedResponse(response.data)
+          categories.push(...result.data)
+          lastPage = result.pagination.lastPage
+          page += 1
+        } while (page <= lastPage)
+
+        this.categories = categories
+      } catch (err) {
         this.error = err.userMessage
-      })
+      }
     },
     loadProduct() {
       this.loadingProduct = true

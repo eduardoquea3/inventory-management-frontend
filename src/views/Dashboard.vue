@@ -87,7 +87,7 @@ export default {
   mounted() {
     this.loading = true
     api.get('/dashboard').then(res => {
-      this.data = res.data
+      this.data = res.data.data
     }).catch(err => {
       this.error = err.userMessage
     }).finally(() => {

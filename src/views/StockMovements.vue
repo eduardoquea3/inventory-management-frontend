@@ -92,7 +92,7 @@ export default {
       this.error = ''
       try {
         const response = await api.get('/products/' + this.$route.params.id + '/stock-movements')
-        this.movements = response.data
+        this.movements = response.data.data
       } catch (error) {
         this.error = error.userMessage
       } finally {

@@ -12,6 +12,34 @@
     <p v-if="error" class="border-l-2 border-red-700 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error }}</p>
     <p v-if="success" class="border-l-2 border-forest bg-[#edf2eb] px-4 py-3 text-sm text-forest" role="status">{{ success }}</p>
 
+    <form class="border border-[#d9d8cf] bg-clean-label p-4 sm:p-5" aria-label="Filtros de categorías" @submit.prevent="applyFilters">
+      <div class="mb-4 flex items-center gap-2 font-utility text-[8px] font-semibold uppercase tracking-[.14em] text-steel"><span class="size-1.5 bg-safety-amber" aria-hidden="true"></span> Buscar en categorías</div>
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(180px,1.5fr)_minmax(140px,.8fr)_minmax(160px,1fr)_minmax(140px,.8fr)_auto] xl:items-end">
+        <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Nombre de categoría
+          <input v-model="q" placeholder="Buscar por nombre" :disabled="loading" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none transition placeholder:text-[#9ba197] focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]" />
+        </label>
+        <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Estado
+          <select v-model="statusFilter" :disabled="loading" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
+            <option value="">Todos los estados</option><option value="1">Activas</option><option value="0">Inactivas</option>
+          </select>
+        </label>
+        <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Ordenar por
+          <select v-model="sort_by" :disabled="loading" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
+            <option value="">Orden predeterminado</option><option value="created_at">Fecha de creación</option><option value="name">Nombre</option>
+          </select>
+        </label>
+        <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Dirección
+          <select v-model="sort_direction" :disabled="loading || !sort_by" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
+            <option value="asc">Ascendente</option><option value="desc">Descendente</option>
+          </select>
+        </label>
+        <div class="flex items-end gap-2 sm:col-span-2 xl:col-span-1">
+          <button type="button" :disabled="loading" @click="resetFilters" class="h-11 border border-[#c9cdc2] bg-transparent px-4 text-xs font-semibold text-[#626b60] transition hover:border-graphite hover:text-graphite disabled:opacity-50">Limpiar</button>
+          <button type="submit" :disabled="loading" class="h-11 border border-forest bg-forest px-5 text-sm font-semibold text-clean-label transition hover:bg-graphite disabled:cursor-wait disabled:opacity-60">{{ loading ? 'Buscando…' : 'Buscar' }}</button>
+        </div>
+      </div>
+    </form>
+
     <div class="grid items-start gap-5 xl:grid-cols-[minmax(260px,.72fr)_minmax(0,1.5fr)]">
       <section class="overflow-hidden border border-[#d9d8cf] bg-clean-label">
         <header class="flex items-center gap-3 border-b border-[#d9d8cf] px-5 py-4">
@@ -64,7 +92,7 @@
       <p class="m-0 font-utility text-[9px] tabular-nums text-steel">Página {{ pagination.currentPage }} de {{ pagination.lastPage }} <span class="px-1 text-[#b0b5aa]">·</span> {{ pagination.total }} categorías</p>
       <div class="flex flex-wrap items-center gap-2">
         <label class="mr-1 flex items-center gap-2 font-utility text-[8px] font-semibold uppercase tracking-[.08em] text-steel">Por página
-          <select v-model.number="perPage" :disabled="loading" @change="changePageSize" class="h-9 border border-[#c9cdc2] bg-clean-label px-2 font-body text-xs font-normal tracking-normal text-graphite disabled:opacity-60"><option :value="15">15</option><option :value="30">30</option><option :value="50">50</option></select>
+          <select v-model.number="perPage" :disabled="loading" @change="changePageSize" class="h-9 border border-[#c9cdc2] bg-clean-label px-2 font-body text-xs font-normal tracking-normal text-graphite disabled:opacity-60"><option :value="15">15</option><option :value="30">30</option><option :value="50">50</option><option :value="100">100</option></select>
         </label>
         <button type="button" :disabled="loading || pagination.currentPage <= 1" @click="changePage(pagination.currentPage - 1)" class="h-9 border border-[#c9cdc2] bg-clean-label px-3 text-xs font-medium text-graphite transition hover:border-forest disabled:cursor-not-allowed disabled:opacity-40">Anterior</button>
         <button type="button" :disabled="loading || pagination.currentPage >= pagination.lastPage" @click="changePage(pagination.currentPage + 1)" class="h-9 border border-[#c9cdc2] bg-clean-label px-3 text-xs font-medium text-graphite transition hover:border-forest disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button>
@@ -75,6 +103,7 @@
 
 <script>
 import api from '../api'
+import { buildCategoriesParams, readPaginatedResponse } from '../utils/catalogQuery'
 
 const emptyForm = () => ({ id: null, name: '', description: '', status: 1 })
 
@@ -84,6 +113,10 @@ export default {
       categories: [],
       page: 1,
       perPage: 15,
+      q: '',
+      statusFilter: '',
+      sort_by: '',
+      sort_direction: 'asc',
       pagination: { currentPage: 1, lastPage: 1, total: 0 },
       form: emptyForm(),
       loading: false,
@@ -109,6 +142,17 @@ export default {
       this.page = 1
       this.load()
     },
+    applyFilters() {
+      this.page = 1
+      this.load()
+    },
+    resetFilters() {
+      this.q = ''
+      this.statusFilter = ''
+      this.sort_by = ''
+      this.sort_direction = 'asc'
+      this.applyFilters()
+    },
     async load() {
       if (this.loading) return
       this.loading = true
@@ -116,22 +160,28 @@ export default {
       try {
         for (let attempt = 0; attempt < 2; attempt++) {
           const requestedPage = this.page
-          const response = await api.get('/categories', {
-            params: { page: requestedPage, per_page: this.perPage }
+          const params = buildCategoriesParams({
+            page: requestedPage,
+            perPage: this.perPage,
+            q: this.q,
+            status: this.statusFilter,
+            sort_by: this.sort_by,
+            sort_direction: this.sort_direction
           })
-          const { data, meta } = response.data
-          const lastPage = Math.max(1, Number(meta.last_page) || 1)
+          const response = await api.get('/categories?' + params.toString())
+          const result = readPaginatedResponse(response.data)
+          const lastPage = result.pagination.lastPage
           if (requestedPage > lastPage && attempt === 0) {
             this.page = lastPage
             continue
           }
-          this.categories = data
+          this.categories = result.data
           this.pagination = {
-            currentPage: meta.current_page,
+            currentPage: result.pagination.currentPage,
             lastPage,
-            total: meta.total
+            total: result.pagination.total
           }
-          this.page = Math.min(Number(meta.current_page) || 1, lastPage)
+          this.page = Math.min(result.pagination.currentPage, lastPage)
           break
         }
       } catch (error) {

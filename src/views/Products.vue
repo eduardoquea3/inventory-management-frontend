@@ -11,30 +11,62 @@
       </router-link>
     </header>
 
-    <section class="border border-[#d9d8cf] bg-clean-label p-4 sm:p-5" aria-label="Filtros de productos">
+    <form class="border border-[#d9d8cf] bg-clean-label p-4 sm:p-5" aria-label="Filtros de productos" @submit.prevent="applyFilters">
       <div class="mb-4 flex items-center gap-2 font-utility text-[8px] font-semibold uppercase tracking-[.14em] text-steel"><span class="size-1.5 bg-safety-amber" aria-hidden="true"></span> Buscar en el catálogo</div>
-      <div class="grid gap-3 sm:grid-cols-[minmax(180px,1.5fr)_minmax(150px,1fr)_minmax(140px,.8fr)_auto] sm:items-end">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Nombre o referencia
-          <input v-model="q" placeholder="Buscar producto" :disabled="loading" @keyup.enter="applyFilters" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none transition placeholder:text-[#9ba197] focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]" />
+          <input v-model="q" placeholder="Buscar producto" :disabled="loading" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none transition placeholder:text-[#9ba197] focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]" />
         </label>
         <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Categoría
-          <select v-model="category_id" :disabled="loading" @change="applyFilters" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
+          <select v-model="category_id" :disabled="loading" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
             <option value="">Todas las categorías</option>
             <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
         </label>
         <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Estado
-          <select v-model="status" :disabled="loading" @change="applyFilters" aria-label="Filtrar por estado" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
+          <select v-model="status" :disabled="loading" aria-label="Filtrar por estado" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
             <option value="">Todos los estados</option>
             <option value="1">Activos</option>
             <option value="0">Inactivos</option>
           </select>
         </label>
-        <button :disabled="loading" @click="applyFilters" class="h-11 border border-forest bg-forest px-5 text-sm font-semibold text-clean-label transition hover:bg-graphite disabled:cursor-wait disabled:opacity-60">{{ loading ? 'Buscando...' : 'Buscar' }}</button>
+        <fieldset class="grid grid-cols-2 gap-3 border-0 p-0 sm:col-span-2">
+          <legend class="mb-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Rango de precio</legend>
+          <label class="grid gap-1 font-utility text-[8px] text-steel">Mínimo
+            <input v-model="min_price" type="number" step="any" :disabled="loading" placeholder="Sin mínimo" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm text-graphite outline-none placeholder:text-[#9ba197] focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]" />
+          </label>
+          <label class="grid gap-1 font-utility text-[8px] text-steel">Máximo
+            <input v-model="max_price" type="number" step="any" :disabled="loading" placeholder="Sin máximo" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm text-graphite outline-none placeholder:text-[#9ba197] focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]" />
+          </label>
+        </fieldset>
+        <fieldset class="grid grid-cols-2 gap-3 border-0 p-0 sm:col-span-2">
+          <legend class="mb-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Rango de stock</legend>
+          <label class="grid gap-1 font-utility text-[8px] text-steel">Mínimo
+            <input v-model="min_stock" type="number" step="any" :disabled="loading" placeholder="Sin mínimo" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm text-graphite outline-none placeholder:text-[#9ba197] focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]" />
+          </label>
+          <label class="grid gap-1 font-utility text-[8px] text-steel">Máximo
+            <input v-model="max_stock" type="number" step="any" :disabled="loading" placeholder="Sin máximo" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm text-graphite outline-none placeholder:text-[#9ba197] focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]" />
+          </label>
+        </fieldset>
+        <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Ordenar por
+          <select v-model="sort_by" :disabled="loading" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
+            <option value="">Orden predeterminado</option><option value="created_at">Fecha de creación</option><option value="name">Nombre</option><option value="price">Precio</option><option value="stock">Stock</option>
+          </select>
+        </label>
+        <label class="grid gap-1.5 font-utility text-[8px] font-semibold uppercase tracking-[.1em] text-[#697267]">Dirección
+          <select v-model="sort_direction" :disabled="loading || !sort_by" class="h-11 w-full border border-[#c9cdc2] bg-white px-3 font-body text-sm font-normal normal-case tracking-normal text-graphite outline-none focus:border-forest focus:ring-2 focus:ring-forest/15 disabled:bg-[#f2f0e8]">
+            <option value="asc">Ascendente</option><option value="desc">Descendente</option>
+          </select>
+        </label>
+        <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-4 lg:justify-end">
+          <button type="button" :disabled="loading" @click="resetFilters" class="h-11 border border-[#c9cdc2] bg-transparent px-4 text-xs font-semibold text-[#626b60] transition hover:border-graphite hover:text-graphite disabled:opacity-50">Limpiar</button>
+          <button type="submit" :disabled="loading" class="h-11 border border-forest bg-forest px-5 text-sm font-semibold text-clean-label transition hover:bg-graphite disabled:cursor-wait disabled:opacity-60">{{ loading ? 'Buscando...' : 'Buscar' }}</button>
+        </div>
       </div>
-    </section>
+    </form>
 
     <p v-if="loading" class="flex items-center gap-3 border border-[#d9d8cf] bg-clean-label px-4 py-3 text-sm text-steel" role="status"><span class="size-2 animate-pulse rounded-full bg-safety-amber motion-reduce:animate-none"></span> Cargando productos...</p>
+    <p v-if="filterError" class="border-l-2 border-safety-amber bg-[#f7f0e2] px-4 py-3 text-sm text-[#765923]" role="alert">{{ filterError }}</p>
     <p v-if="error" class="border-l-2 border-red-700 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error }}</p>
     <p v-if="categoryError" class="border-l-2 border-red-700 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ categoryError }}</p>
     <p v-if="success" class="border-l-2 border-forest bg-[#edf2eb] px-4 py-3 text-sm text-forest" role="status">{{ success }}</p>
@@ -81,7 +113,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <label class="mr-1 flex items-center gap-2 font-utility text-[8px] font-semibold uppercase tracking-[.08em] text-steel">Por página
           <select v-model.number="perPage" :disabled="loading" @change="changePageSize" class="h-9 border border-[#c9cdc2] bg-clean-label px-2 font-body text-xs font-normal tracking-normal text-graphite disabled:opacity-60">
-            <option :value="10">10</option><option :value="25">25</option><option :value="50">50</option>
+            <option :value="15">15</option><option :value="30">30</option><option :value="50">50</option><option :value="100">100</option>
           </select>
         </label>
         <button :disabled="loading || pagination.currentPage <= 1" @click="changePage(pagination.currentPage - 1)" class="h-9 border border-[#c9cdc2] bg-clean-label px-3 text-xs font-medium text-graphite transition hover:border-forest disabled:cursor-not-allowed disabled:opacity-40">Anterior</button>
@@ -93,6 +125,7 @@
 
 <script>
 import api from '../api'
+import { buildProductsParams, readPaginatedResponse, validateProductRanges } from '../utils/catalogQuery'
 
 export default {
   data() {
@@ -102,12 +135,19 @@ export default {
       loading: false,
       error: '',
       categoryError: '',
+      filterError: '',
       success: '',
       q: '',
       category_id: '',
       status: '',
+      min_price: '',
+      max_price: '',
+      min_stock: '',
+      max_stock: '',
+      sort_by: '',
+      sort_direction: 'asc',
       page: 1,
-      perPage: 10,
+      perPage: 15,
       pagination: { currentPage: 1, lastPage: 1, total: 0 },
       deletingId: null
     }
@@ -117,15 +157,27 @@ export default {
     this.loadProducts()
   },
   methods: {
+    resetFilters() {
+      this.q = ''
+      this.category_id = ''
+      this.status = ''
+      this.min_price = ''
+      this.max_price = ''
+      this.min_stock = ''
+      this.max_stock = ''
+      this.sort_by = ''
+      this.sort_direction = 'asc'
+      this.applyFilters()
+    },
     async loadCategories() {
       this.categoryError = ''
       try {
-        const first = await api.get('/categories', { params: { page: 1, per_page: 15 } })
-        const { data, meta } = first.data
-        const categories = [...data]
-        for (let page = 2; page <= Number(meta.last_page); page++) {
-          const response = await api.get('/categories', { params: { page, per_page: 15 } })
-          categories.push(...response.data.data)
+        const first = await api.get('/categories', { params: { page: 1, per_page: 100 } })
+        const firstPage = readPaginatedResponse(first.data)
+        const categories = [...firstPage.data]
+        for (let page = 2; page <= firstPage.pagination.lastPage; page++) {
+          const response = await api.get('/categories', { params: { page, per_page: 100 } })
+          categories.push(...readPaginatedResponse(response.data).data)
         }
         this.categories = categories
       } catch (err) {
@@ -133,6 +185,8 @@ export default {
       }
     },
     applyFilters() {
+      this.filterError = validateProductRanges(this)
+      if (this.filterError) return
       this.page = 1
       this.loadProducts()
     },
@@ -146,26 +200,41 @@ export default {
     },
     async loadProducts() {
       if (this.loading) return
+      this.filterError = validateProductRanges(this)
+      if (this.filterError) return
       this.loading = true
       this.error = ''
       this.success = ''
       try {
         for (let attempt = 0; attempt < 2; attempt++) {
           const requestedPage = this.page
-          const params = new URLSearchParams({ page: String(requestedPage), per_page: String(this.perPage) })
-          if (this.q) params.set('q', this.q)
-          if (this.category_id !== '') params.set('category_id', String(this.category_id))
-          if (this.status !== '') params.set('status', this.status)
+          const params = buildProductsParams({
+            page: requestedPage,
+            perPage: this.perPage,
+            q: this.q,
+            category_id: this.category_id,
+            status: this.status,
+            min_price: this.min_price,
+            max_price: this.max_price,
+            min_stock: this.min_stock,
+            max_stock: this.max_stock,
+            sort_by: this.sort_by,
+            sort_direction: this.sort_direction
+          })
           const res = await api.get('/products?' + params.toString())
-          const { data, meta } = res.data
-          const lastPage = Math.max(1, Number(meta.last_page) || 1)
+          const result = readPaginatedResponse(res.data)
+          const lastPage = result.pagination.lastPage
           if (requestedPage > lastPage && attempt === 0) {
             this.page = lastPage
             continue
           }
-          this.products = data
-          this.pagination = { currentPage: meta.current_page, lastPage, total: meta.total }
-          this.page = Math.min(Number(meta.current_page) || 1, lastPage)
+          this.products = result.data
+          this.pagination = {
+            currentPage: result.pagination.currentPage,
+            lastPage,
+            total: result.pagination.total
+          }
+          this.page = Math.min(result.pagination.currentPage, lastPage)
           break
         }
       } catch (err) {

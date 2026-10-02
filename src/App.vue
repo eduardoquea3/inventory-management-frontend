@@ -44,13 +44,21 @@
 </template>
 
 <script>
+import api from './api'
+import { useAuthStore } from './stores/auth'
+
 export default {
   data() {
     return { menuOpen: false }
   },
   methods: {
-    logout() {
-      localStorage.removeItem('token')
+    async logout() {
+      try {
+        await api.post('/logout')
+      } catch {
+        // Clear the local session even if the API is unavailable.
+      }
+      useAuthStore().clearToken()
       this.$router.push('/login')
     }
   }
