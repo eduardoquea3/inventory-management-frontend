@@ -65,7 +65,7 @@ export default {
     login() {
       // Legacy issue: no loading state and no strong frontend validation.
       api.post('/login', { email: this.email, password: this.password }).then(res => {
-        useAuthStore().setToken(res.data.token)
+        useAuthStore().setToken(res.data.data.token)
         this.$router.push('/dashboard')
       }).catch(err => {
         this.error = err.userMessage

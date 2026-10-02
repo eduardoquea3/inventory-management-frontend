@@ -75,7 +75,15 @@ describe('Dashboard and login flows', () => {
     const localStorage = { getItem: vi.fn(() => null), setItem: vi.fn() }
     const push = vi.fn()
     vi.stubGlobal('localStorage', localStorage)
-    api.post.mockResolvedValue({ data: { token: 'session-token' } })
+    api.post.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          token: 'session-token',
+          user: { id: 3, name: 'Operator', email: 'operator@example.test' }
+        }
+      }
+    })
 
     wrapper = mount(Login, {
       global: {
