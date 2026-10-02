@@ -3,8 +3,6 @@ node_modules/
 dist/
 
 # Local environment
-.env
-.env.*
 !.env.example
 
 # Local reference material, not part of the frontend repository
@@ -12,3 +10,4 @@ dist/
 
 # Local Pi runtime state
 .atl/
+config.bat
