@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "development",
+    "feat/vue3-frontend-migration",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "development": "main",
+    "feat/vue3-frontend-migration": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "development",
+    "feat/vue3-frontend-migration",
+    "origin"
+  ]
+}
