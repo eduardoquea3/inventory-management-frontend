@@ -19,7 +19,7 @@ bun install
 bun run dev
 ```
 
-La URL de API predeterminada es `http://127.0.0.1:8000/api`. Puedes cambiarla definiendo `VITE_API_URL` en un archivo de entorno local antes de iniciar Vite.
+En desarrollo local, Axios usa `http://127.0.0.1:8000/api` por defecto. Si la API usa otra dirección, define `VITE_API_URL` en `.env.local`.
 
 Comandos disponibles:
 
@@ -50,21 +50,29 @@ BACKEND_DNS_RESOLVER=10.89.1.1 podman-compose up --build
 
 Abre <http://localhost:8081>. El Compose backend construye el Dockerfile de este repositorio y Nginx sirve la aplicación y reenvía `/api` a Laravel.
 
-También puedes ejecutar frontend y backend como Compose independientes. Elige el bloque correspondiente a tu runtime:
+También puedes ejecutar frontend y backend como Compose independientes. En este modo, crea `.env` desde el ejemplo antes de construir la imagen; contiene `VITE_API_URL=/api`, que dirige las peticiones por el proxy Nginx.
+
+Con Docker Engine:
 
 ```bash
-# Docker Engine
+# Desde el repositorio backend
 cd ../backend-legacy-laravel8
 docker compose up --build -d mysql app
+# Desde el repositorio frontend
 cd ../frontend-legacy-vue2
+cp .env.example .env
 BACKEND_DNS_RESOLVER=127.0.0.11 docker compose up --build
 ```
 
+Con Podman rootless en Linux:
+
 ```bash
-# Podman rootless en Linux
+# Desde el repositorio backend
 cd ../backend-legacy-laravel8
 BACKEND_DNS_RESOLVER=10.89.1.1 podman-compose up --build -d mysql app
+# Desde el repositorio frontend
 cd ../frontend-legacy-vue2
+cp .env.example .env
 BACKEND_DNS_RESOLVER=10.89.1.1 podman-compose up --build
 ```
 
